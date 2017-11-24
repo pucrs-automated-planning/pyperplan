@@ -160,6 +160,7 @@ def top_kstar_search(task, heuristic, k=10, make_open_entry=ordered_node_astar,
                 solutions.append(pop_node.extract_solution())
 
                 if len(solutions) == k:
+                    logging.info("All %d goals found, returning plans" % k)
                     return solutions
                 else:
                     tk_expansions = int(expansions*0.2)

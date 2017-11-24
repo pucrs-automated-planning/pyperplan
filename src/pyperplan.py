@@ -133,11 +133,14 @@ def _ground(problem):
     logging.info('{0} Operators created'.format(len(task.operators)))
     return task
 
-
-def _search(task, search, heuristic, use_preferred_ops=False):
+# TODO Refactor this to avoid this nasty structuring
+def _search(task, search, heuristic, k=1, use_preferred_ops=False):
     logging.info('Search start: {0}'.format(task.name))
     if heuristic:
-        if use_preferred_ops:
+        if k>1:
+            solution = search(task, heuristic, k=k)
+        elif use_preferred_ops:
+        # if use_preferred_ops:
             solution = search(task, heuristic, use_preferred_ops)
         else:
             solution = search(task, heuristic)
@@ -154,7 +157,7 @@ def _write_solution(solution, filename):
             print(op.name, file=file)
 
 
-def search_plan(domain_file, problem_file, search, heuristic_class,
+def search_plan(domain_file, problem_file, search, heuristic_class, k = 1,
                 use_preferred_ops=False):
     """
     Parses the given input files to a specific planner task and then tries to
@@ -167,6 +170,7 @@ def search_plan(domain_file, problem_file, search, heuristic_class,
                             search space
     @param heuristic_class  A class implementing the heuristic_base.Heuristic
                             interface
+    @param k                The number of plans to return in topk algorithms
     @return A list of actions that solve the problem
     """
     problem = _parse(domain_file, problem_file)
@@ -177,6 +181,8 @@ def search_plan(domain_file, problem_file, search, heuristic_class,
     search_start_time = time.clock()
     if use_preferred_ops and isinstance(heuristic, heuristics.hFFHeuristic):
         solution = _search(task, search, heuristic, use_preferred_ops=True)
+    elif search.__name__ == "top_kstar_search" :
+        solution = _search(task, search, heuristic, k=k, use_preferred_ops=True)
     else:
         solution = _search(task, search, heuristic)
     logging.info('Wall-clock search time: {0:.2}'.format(time.clock() -
@@ -223,6 +229,7 @@ if __name__ == '__main__':
     argparser.add_argument('-s', '--search', choices=SEARCHES.keys(),
         help='Select a search algorithm from {0}'.format(search_names),
         default='bfs')
+    argparser.add_argument('-k', '--topk', type=int, help="Select the number of top plans to search for", default=1)
     args = argparser.parse_args()
 
     logging.basicConfig(level=getattr(logging, args.loglevel.upper()),
@@ -254,7 +261,8 @@ if __name__ == '__main__':
     logging.info('using heuristic: %s' % (heuristic.__name__ if heuristic
                                           else None))
     use_preferred_ops = (args.heuristic == 'hffpo')
-    solution = search_plan(args.domain, args.problem, search, heuristic,
+
+    solution = search_plan(args.domain, args.problem, search, heuristic, k = args.topk,
                            use_preferred_ops=use_preferred_ops)
 
     if solution is None:
