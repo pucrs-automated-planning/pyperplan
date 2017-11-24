@@ -46,6 +46,7 @@ SEARCHES = {
     'ehs': search.enforced_hillclimbing_search,
     'ids': search.iterative_deepening_search,
     'sat': search.sat_solve,
+    'tkstar': search.top_kstar_search,
 }
 
 
@@ -235,6 +236,8 @@ if __name__ == '__main__':
         argparser.print_help()
         exit(2)
 
+    tk_searches = ['tkstar']
+
     args.problem = os.path.abspath(args.problem)
     if args.domain is None:
         args.domain = find_domain(args.problem)
@@ -257,7 +260,15 @@ if __name__ == '__main__':
     if solution is None:
         logging.warning('No solution could be found')
     else:
-        solution_file = args.problem + '.soln'
-        logging.info('Plan length: %s' % len(solution))
-        _write_solution(solution, solution_file)
-        validate_solution(args.domain, args.problem, solution_file)
+        if args.search in tk_searches:
+            logging.info('Plans found: %s' % len(solution))
+            for index, sol in enumerate(solution):
+                solution_file = "{0}{1}{2}".format(args.problem,index,'.soln')
+                logging.info('Plan length %d: %s' % (index,len(sol)))
+                _write_solution(sol, solution_file)
+                validate_solution(args.domain, args.problem, solution_file)
+        else:
+            solution_file = args.problem + '.soln'
+            logging.info('Plan length: %s' % len(solution))
+            _write_solution(solution, solution_file)
+            validate_solution(args.domain, args.problem, solution_file)

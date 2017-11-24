@@ -21,4 +21,6 @@ from .enforced_hillclimbing_search import enforced_hillclimbing_search
 from .iterative_deepening_search import iterative_deepening_search
 from .sat import sat_solve
 
+from .tk_star import top_kstar_search, weighted_top_kstar_search
+
 from .searchspace import make_root_node, make_child_node
