@@ -80,6 +80,7 @@ class Effect:
 
 
 class Action:
+    # TODO Handle negative preconditions
     def __init__(self, name, signature, precondition, effect):
         """
         name: The name identifying the action
